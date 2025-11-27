@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 
 import Form from '../components/Form'
 import MenuContext from '../components/MenuContext'
@@ -13,25 +13,34 @@ const Main = () => {
   const { isMobile } = UseMainContext()
   const { setPoints } = UseGridContext()
 
+  const clearPoints = useCallback(() => {
+    setPoints([])
+  }, [setPoints])
+
+  // clear points
   useEffect(() => {
     if (!isMobile) {
       return
     }
 
-    const clear = () => setPoints([])
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'hidden') clear()
+    const handleVisibility = (event: Event) => {
+      if (document.visibilityState === 'hidden' || event.type === 'freeze') {
+        clearPoints()
+      }
     }
 
-    window.addEventListener('pagehide', clear)
+    // attach listeners
+    window.addEventListener('pagehide', clearPoints)
     document.addEventListener('visibilitychange', handleVisibility)
+    document.addEventListener('freeze', handleVisibility)
 
+    // detach listeners
     return () => {
-      window.removeEventListener('pagehide', clear)
+      window.removeEventListener('pagehide', clearPoints)
       document.removeEventListener('visibilitychange', handleVisibility)
+      document.removeEventListener('freeze', handleVisibility)
     }
-  }, [])
+  }, [isMobile, clearPoints])
 
   return (
     <>
